@@ -41,7 +41,7 @@ public class Tests
     public void LoadRangesTest()
     {
         var ranges = LoadRanges(new List<string> { "../../../data/1.iprs", "../../../data/2.iprs" });
-        throw new NotImplementedException("Допишите тест после задания структуры IPRangesDatabase");
+        That(ranges, Has.Count.EqualTo(108));
     }
     
     [Test]

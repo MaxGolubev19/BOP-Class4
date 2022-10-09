@@ -14,7 +14,7 @@ public class Tests
         try
         {
             File.Copy("../../../data/text-utf8.txt", tmpFileName, true);
-            Main(new[] { tmpFileName, "utf-8", "windows-1251" });
+            Main(new[] { tmpFileName, "utf-8", "utf-16" });
             That(File.ReadAllBytes(tmpFileName), Is.EqualTo(File.ReadAllBytes("../../../data/text-windows-1251.txt")));
         }
         finally
@@ -30,7 +30,7 @@ public class Tests
         try
         {
             File.Copy("../../../data/text-windows-1251.txt", tmpFileName, true);
-            Main(new[] { tmpFileName, "windows-1251", "utf-8"});
+            Main(new[] { tmpFileName, "utf-16", "utf-8"});
             That(File.ReadAllBytes(tmpFileName), Is.EqualTo(File.ReadAllBytes("../../../data/text-utf8.txt")));
         }
         finally

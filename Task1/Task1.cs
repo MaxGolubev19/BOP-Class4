@@ -1,8 +1,13 @@
-﻿namespace Task1
+﻿using static Task1.Task1;
+
+namespace Task1
 {
+    using NUnit.Framework;
+    using System.Net.NetworkInformation;
+    using System.Text;
     // Необходимо заменить на более подходящий тип (коллекцию), позволяющий
     // эффективно искать диапазон по заданному IP-адресу
-    using IPRangesDatabase = Object;
+    using IPRangesDatabase = List<IPRange>;
 
     public class Task1
     {
@@ -13,11 +18,19 @@
         */
         internal record IPv4Addr (string StrValue) : IComparable<IPv4Addr>
         {
-            internal uint IntValue = Ipstr2Int();
+            internal uint IntValue = Ipstr2Int(StrValue);
 
-            private static uint Ipstr2Int()
+            private static uint Ipstr2Int(string StrValue)
             {
-                throw new NotImplementedException();
+                var strNumbers = StrValue.Split('.');
+                uint uintValue = 0;
+
+                for (int i = 0; i < strNumbers.Length; i++)
+                {
+                    uintValue += uint.Parse(strNumbers[strNumbers.Length - i - 1]) * (uint)Math.Pow(2, i * 8);
+                }
+
+                return uintValue;
             }
 
             // Благодаря этому методу мы можем сравнивать два значения IPv4Addr
@@ -32,31 +45,76 @@
             }
         }
 
+        //Класс для хранения диапазонов
         internal record class IPRange(IPv4Addr IpFrom, IPv4Addr IpTo)
         {
             public override string ToString()
             {
-                return $"{IpFrom},{IpTo}";
+                return $"{IpFrom}, {IpTo}";
             }
         }
 
-        internal record class IPLookupArgs(string IpsFile, List<string> IprsFiles);
+        //Класс для хранения входных данных
+        internal record class IPLookupArgs(string IpsFile, List<string> IprsFiles)
+        {
+            public virtual bool Equals(IPLookupArgs other)
+            {
+                if (other == null)
+                    return false;
+                return IpsFile.Equals(other.IpsFile) && Enumerable.SequenceEqual(IprsFiles, other.IprsFiles);
+            }
+        }
        
+        //Преобразование входных данных
         internal static IPLookupArgs? ParseArgs(string[] args)
         {
-            throw new NotImplementedException();
+            if (args.Count() < 2)
+                return null;
+
+            var ipsFile = args[0];
+            List<string> iprsFiles = new ArraySegment<string>(args, 1, args.Length - 1).ToList();
+
+            return new IPLookupArgs(ipsFile, iprsFiles);
         }
 
-        internal static List<string> LoadQuery(string filename) {
-            throw new NotImplementedException();
+        //Создание списка ip-адресов
+        internal static List<string> LoadQuery(string filename)
+        {
+            return new List<string>(File.ReadAllLines(filename));
         }
 
-        internal static IPRangesDatabase LoadRanges(List<String> filenames) {
-            throw new NotImplementedException();
+        //Создание коллекции диапазонов
+        internal static IPRangesDatabase LoadRanges(List<String> filenames) 
+        {
+            var ipRangesDatabase = new IPRangesDatabase();
+
+            foreach (var filename in filenames)
+            {
+                var ipRanges = new List<string>(File.ReadAllLines(filename));
+
+                foreach (var strIpRange in ipRanges)
+                {
+                    var strIps = strIpRange.Split(',');
+
+                    var ipRange = new IPRange(new IPv4Addr(strIps[0]), new IPv4Addr(strIps[1]));
+
+                    ipRangesDatabase.Add(ipRange);
+                }
+            }
+
+            return ipRangesDatabase;
         }
 
-        internal static IPRange? FindRange(IPRangesDatabase ranges, IPv4Addr query) {
-            throw new NotImplementedException();
+        //Поиск диапазона, в котором лежит ip
+        internal static IPRange? FindRange(IPRangesDatabase ranges, IPv4Addr query) 
+        {
+            foreach (var range in ranges)
+            {
+                if (query.CompareTo(range.IpFrom) >= 0 && query.CompareTo(range.IpTo) <= 0)
+                    return range;
+            }
+
+            return null;
         }
         
         public static void Main(string[] args)
@@ -68,18 +126,27 @@
             }
 
             var queries = LoadQuery(ipLookupArgs.IpsFile);
-                var ranges = LoadRanges(ipLookupArgs.IprsFiles);
-                foreach (var ip in queries)
-                {
-                    var findRange = FindRange(ranges, new IPv4Addr(ip));
-                    var result = TODO<string>();
-                    Console.WriteLine($"{ip}: {result}");
-                }
+            var ranges = LoadRanges(ipLookupArgs.IprsFiles);
+            var file = args[0];
+
+            File.WriteAllText(file, string.Empty);
+
+            foreach (var ip in queries)
+            {
+                var findRange = FindRange(ranges, new IPv4Addr(ip));
+                var result = PrintResult(ip, findRange);
+
+                File.AppendAllText(file, result + Environment.NewLine);
+            }
         }
         
-        private static T TODO<T>()
+        //Форматирование результата
+        private static string PrintResult(string ip, IPRange? findRange)
         {
-            throw new NotImplementedException();
+            if (findRange == null)
+                return $"{ip}: NO";
+            else
+                return $"{ip}: YES ({findRange})";
         }
     }
 }

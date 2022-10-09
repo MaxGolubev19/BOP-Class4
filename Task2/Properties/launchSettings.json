@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Task2": {
+      "commandName": "Project",
+      "commandLineArgs": "../../../data/text-utf8.txt utf-8 utf-16\r\n"
+    }
+  }
+}
